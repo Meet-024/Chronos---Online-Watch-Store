@@ -1,13 +1,21 @@
 # Chronos — Online Watch Store
 
-Chronos is a premium, full-stack e-commerce web application dedicated to luxury and lifestyle watches. Built using the modern MERN stack (MongoDB, Express, React, Node.js), it provides a seamless shopping experience for users and a comprehensive dashboard for administrators to manage products, categories, orders, and messages.
+Chronos is a premium, full-stack e-commerce web application dedicated to luxury and lifestyle watches. Built using an **ASP.NET Core Web API** (C#, Entity Framework Core, SQLite) backend and a modern **React.js** frontend, it provides a seamless shopping experience for users and a comprehensive dashboard for administrators to manage products, categories, orders, and messages.
+
+---
+
+## 📌 Project Overview (Resume Summary)
+
+- **Built a full-stack shopping website** where users can browse, search, and filter watches by category, brand, and price, as well as manage their cart, wishlist, and orders.
+- **Created backend APIs using ASP.NET Core and C#** with Entity Framework Core and SQLite database to handle user login, user registration, and product data.
+- **Added security with JWT tokens** and created an Admin panel to let administrators add, edit, or delete products, manage categories, and view customer orders.
 
 ---
 
 ## 🚀 Features
 
 ### 🛍️ Customer Experience
-- **Interactive Shop**: Browse, filter by category/brand, and search for watches.
+- **Interactive Shop**: Browse, filter by category, brand, and price range, and search for watches.
 - **Product Details**: Detailed specifications, reviews, and real-time stock availability.
 - **Cart & Wishlist**: Manage items, adjust quantities, and save favorites.
 - **User Dashboard**: Track orders, manage profile details, and review order histories.
@@ -24,8 +32,8 @@ Chronos is a premium, full-stack e-commerce web application dedicated to luxury 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React.js, React Router, Context API, Lucide React (Icons), Vanilla CSS
-- **Backend**: Node.js, Express.js, JWT Authentication, Multer (File uploads)
-- **Database**: MongoDB (Mongoose ODM)
+- **Backend**: ASP.NET Core 10 Web API, C#, Entity Framework Core, JWT Bearer Authentication, BCrypt
+- **Database**: SQLite (`chronos.db`) with automatic EF Core data seeder
 
 ---
 
@@ -34,64 +42,49 @@ Chronos is a premium, full-stack e-commerce web application dedicated to luxury 
 Follow these steps to set up and run Chronos locally on your system.
 
 ### Prerequisites
+- [.NET 10 SDK](https://dotnet.microsoft.com/) installed
 - [Node.js](https://nodejs.org/) installed
-- [MongoDB](https://www.mongodb.com/) running locally or a MongoDB Atlas URI
 
 ### 1. Clone & Setup Workspace
 Ensure your workspace structure looks like this:
 ```text
-WatchStore/
-├── backend/
-└── frontend/
+chronos/
+├── aspnet_backend/
+├── frontend/
+└── Chronos.sln
 ```
 
-### 2. Configure Backend
-Navigate to the `backend` folder and create a `.env` file (based on `.env.example`):
+### 2. Run Backend API
 
+#### Option A: Visual Studio
+1. Open `Chronos.sln` in Visual Studio.
+2. Select the `http` profile and press `F5` (or click Run).
+
+#### Option B: .NET CLI
+Navigate to the `aspnet_backend` folder and start the API:
 ```bash
-cd backend
-npm install
-```
-
-Create a `.env` file inside the `backend/` folder:
-```env
-PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/watch_store
-JWT_SECRET=supersecretwatchstorekey123
-```
-
-#### Seed Database
-Populate the database with initial products, categories, and test user accounts:
-```bash
-npm run seed
-```
-*This seeds a test user (`user@example.com` / `password123`) and an admin user (`admin@example.com` / `password123`).*
-
-#### Start Backend Server
-```bash
-npm start
+cd aspnet_backend
+dotnet run --launch-profile http
 ```
 The API server will run at `http://localhost:5000`.
 
 ---
 
-### 3. Configure Frontend
+### 3. Run Frontend App
+
 Navigate to the `frontend` folder, install dependencies, and start the development server:
 
 ```bash
-cd ../frontend
+cd frontend
 npm install
 npm run dev
 ```
 
-The application will run locally at `http://localhost:3000/`.
+The application will run locally at `http://localhost:3000`.
 
 ---
 
-## 🏗️ Production Build
-To generate a production-ready build of the frontend application:
-```bash
-cd frontend
-npm run build
-```
-This compiles the assets into a high-performance `dist` directory using Vite.
+## 🔑 Test Accounts
+
+- **Regular Customer**: `user@example.com` / `password123`
+- **Administrator**: `admin@example.com` / `password123`
