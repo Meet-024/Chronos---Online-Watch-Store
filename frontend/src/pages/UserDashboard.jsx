@@ -23,7 +23,7 @@ const UserDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('orders');
-  const [profileForm, setProfileForm] = useState({ name: user?.name, email: user?.email, oldPassword: '', password: '' });
+  const [profileForm, setProfileForm] = useState({ name: user?.name || '', email: user?.email || '', oldPassword: '', password: '' });
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
@@ -80,10 +80,10 @@ const UserDashboard = () => {
     <div style={{ padding: '40px 0', maxWidth: '1100px', margin: '0 auto' }}>
       <div className="dashboard-banner">
         <div className="dashboard-avatar">
-          {user.name.charAt(0).toUpperCase()}
+          {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
         </div>
         <div>
-          <h2 style={{ marginBottom: '4px' }}>Welcome back, {user.name.split(' ')[0]} 👋</h2>
+          <h2 style={{ marginBottom: '4px' }}>Welcome back, {user.name ? user.name.split(' ')[0] : 'Customer'} 👋</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{user.email}</p>
         </div>
         <button onClick={handleLogout} className="btn btn-outline" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 18px' }}>
@@ -157,37 +157,41 @@ const UserDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order) => (
-                  <tr key={order._id}>
-                    <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
-                      #{order._id.substring(0, 10).toUpperCase()}
-                    </td>
-                    <td>{formatDate(order.createdAt)}</td>
-                    <td style={{ fontWeight: 600, color: 'var(--primary-color)' }}>
-                      {formatINR(order.totalPrice)}
-                    </td>
-                    <td>
-                      <span style={{
-                        background: `${statusColor(order.status)}22`,
-                        color: statusColor(order.status),
-                        padding: '3px 10px',
-                        borderRadius: '50px',
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                      }}>
-                        {order.status || 'Processing'}
-                      </span>
-                    </td>
-                    <td>
-                      <Link
-                        to={`/order/${order._id}`}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: 'var(--primary-color)', fontWeight: 600, fontSize: '0.82rem' }}
-                      >
-                        <Eye size={14} /> View
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {orders.map((order) => {
+                  const oId = order.id || order._id || '';
+                  const oIdStr = String(oId);
+                  return (
+                    <tr key={oIdStr}>
+                      <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                        #{oIdStr.length > 10 ? oIdStr.substring(0, 10).toUpperCase() : oIdStr.toUpperCase()}
+                      </td>
+                      <td>{formatDate(order.createdAt)}</td>
+                      <td style={{ fontWeight: 600, color: 'var(--primary-color)' }}>
+                        {formatINR(order.totalPrice)}
+                      </td>
+                      <td>
+                        <span style={{
+                          background: `${statusColor(order.status)}22`,
+                          color: statusColor(order.status),
+                          padding: '3px 10px',
+                          borderRadius: '50px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                        }}>
+                          {order.status || 'Processing'}
+                        </span>
+                      </td>
+                      <td>
+                        <Link
+                          to={`/order/${oId}`}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: 'var(--primary-color)', fontWeight: 600, fontSize: '0.82rem' }}
+                        >
+                          <Eye size={14} /> View
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -204,19 +208,22 @@ const UserDashboard = () => {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {wishlistItems.map((item) => (
-                <div key={item._id} className="wishlist-row">
-                  <img src={item.images?.[0] || item.image || 'https://placehold.co/400x300?text=Watch'} alt={item.name} className="wishlist-row-img" />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--primary-color)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>{item.brand}</div>
-                    <div style={{ fontWeight: 600, marginTop: '2px' }}>{item.name}</div>
+              {wishlistItems.map((item) => {
+                const wId = item.id || item._id;
+                return (
+                  <div key={wId} className="wishlist-row">
+                    <img src={item.images?.[0] || item.image || 'https://placehold.co/400x300?text=Watch'} alt={item.name} className="wishlist-row-img" />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--primary-color)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>{item.brand}</div>
+                      <div style={{ fontWeight: 600, marginTop: '2px' }}>{item.name}</div>
+                    </div>
+                    <div style={{ fontWeight: 700, color: 'var(--primary-color)', whiteSpace: 'nowrap' }}>{formatINR(item.price)}</div>
+                    <Link to={`/product/${wId}`} className="btn" style={{ padding: '7px 16px', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      View <ChevronRight size={14} />
+                    </Link>
                   </div>
-                  <div style={{ fontWeight: 700, color: 'var(--primary-color)', whiteSpace: 'nowrap' }}>{formatINR(item.price)}</div>
-                  <Link to={`/product/${item._id}`} className="btn" style={{ padding: '7px 16px', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    View <ChevronRight size={14} />
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -226,7 +233,7 @@ const UserDashboard = () => {
         <div className="dashboard-section">
           <div className="profile-card">
             <div className="dashboard-avatar" style={{ width: '72px', height: '72px', fontSize: '2rem', marginBottom: '16px' }}>
-              {user.name.charAt(0).toUpperCase()}
+              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
             </div>
             <div className="profile-field">
               <label>Full Name</label>
