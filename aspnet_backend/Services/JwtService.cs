@@ -17,7 +17,7 @@ namespace Chronos.Api.Services
 
         public string GenerateToken(User user)
         {
-            var jwtSecret = _config["JwtSettings:Secret"] ?? "supersecretwatchstorekey123_aspnetcore_chronos";
+            var jwtSecret = _config["JwtSettings:Secret"] ?? "YourSuperSecretJwtKey_Chronos_WatchStore_Default_ChangeInProduction";
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

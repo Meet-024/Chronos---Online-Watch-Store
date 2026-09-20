@@ -13,7 +13,7 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<ChronosDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=chronos.db"));
 
-var jwtSecret = builder.Configuration["JwtSettings:Secret"] ?? "supersecretwatchstorekey123_aspnetcore_chronos";
+var jwtSecret = builder.Configuration["JwtSettings:Secret"] ?? "YourSuperSecretJwtKey_Chronos_WatchStore_Default_ChangeInProduction";
 var key = Encoding.UTF8.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(options =>
