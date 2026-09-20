@@ -1,0 +1,12 @@
+# Build outputs & binaries
+bin/
+obj/
+*.db-shm
+*.db-wal
+.vs/
+.vscode/
+
+# Node dependencies
+node_modules/
+dist/
+.DS_Store
