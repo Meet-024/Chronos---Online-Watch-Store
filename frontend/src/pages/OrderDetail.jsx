@@ -79,7 +79,7 @@ const OrderDetail = () => {
           <div>
             <h2 style={{ marginBottom: '4px' }}>Order Details</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              Order <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>#{order._id.toUpperCase()}</span>
+              Order <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>#{String(order.id || order._id || id).toUpperCase()}</span>
               &nbsp;·&nbsp; Placed on {formatDate(order.createdAt)}
             </p>
           </div>
