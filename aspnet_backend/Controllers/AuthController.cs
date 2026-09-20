@@ -162,5 +162,58 @@ namespace Chronos.Api.Controllers
                 return Ok(new { message = "Added to wishlist", isWishlisted = true });
             }
         }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            if (role != "admin") return Forbid();
+
+            var users = await _context.Users
+                .Select(u => new
+                {
+                    id = u.Id,
+                    name = u.Name,
+                    email = u.Email,
+                    role = u.Role
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
+        [HttpPut("{id}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateUserAdmin(int id, [FromBody] UpdateUserAdminDto dto)
+        {
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            if (role != "admin") return Forbid();
+
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            if (!string.IsNullOrEmpty(dto.Name)) user.Name = dto.Name;
+            if (!string.IsNullOrEmpty(dto.Email)) user.Email = dto.Email;
+            if (!string.IsNullOrEmpty(dto.Role)) user.Role = dto.Role;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "User updated successfully" });
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteUserAdmin(int id)
+        {
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            if (role != "admin") return Forbid();
+
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "User deleted successfully" });
+        }
     }
 }

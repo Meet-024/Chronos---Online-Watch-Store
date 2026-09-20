@@ -85,4 +85,11 @@ namespace Chronos.Api.DTOs
         public string Subject { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
     }
+
+    public class UpdateUserAdminDto
+    {
+        public string? Name { get; set; }
+        public string? Email { get; set; }
+        public string? Role { get; set; }
+    }
 }
