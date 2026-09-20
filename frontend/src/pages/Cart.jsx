@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { Trash2, ShoppingBag, Lock, ArrowRight, CheckCircle, X } from 'lucide-react';
+
 const formatINR = (amount) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+
 const CheckoutModal = ({ subtotal, onConfirm, onClose, loading }) => {
   const [form, setForm] = useState({
     address: '',
@@ -14,6 +16,7 @@ const CheckoutModal = ({ subtotal, onConfirm, onClose, loading }) => {
     paymentMethod: 'Cash on Delivery',
   });
   const [errors, setErrors] = useState({});
+
   const validate = () => {
     const e = {};
     if (!form.address.trim()) e.address = 'Address is required';
@@ -22,12 +25,14 @@ const CheckoutModal = ({ subtotal, onConfirm, onClose, loading }) => {
     if (!/^\d{6}$/.test(form.postalCode.trim())) e.postalCode = 'Enter a valid 6-digit PIN';
     return e;
   };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     onConfirm(form);
   };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
@@ -105,15 +110,17 @@ const CheckoutModal = ({ subtotal, onConfirm, onClose, loading }) => {
     </div>
   );
 };
+
 const OrderSuccess = ({ orderId }) => {
   const navigate = useNavigate();
+  const oIdStr = String(orderId || '');
   return (
     <div className="order-success">
       <CheckCircle size={56} style={{ color: 'var(--success-color)', marginBottom: '16px' }} />
       <h2 style={{ marginBottom: '8px' }}>Order Placed! 🎉</h2>
       <p style={{ color: 'var(--text-muted)', marginBottom: '6px' }}>Thank you for shopping with CHRONOS.</p>
       <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '28px' }}>
-        Order ID: <span style={{ fontFamily: 'monospace', color: 'var(--primary-color)' }}>#{orderId?.substring(0, 12).toUpperCase()}</span>
+        Order ID: <span style={{ fontFamily: 'monospace', color: 'var(--primary-color)' }}>#{oIdStr.length > 12 ? oIdStr.substring(0, 12).toUpperCase() : oIdStr.toUpperCase()}</span>
       </p>
       <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
         <button className="btn" onClick={() => navigate('/dashboard')}>View My Orders</button>
@@ -122,6 +129,7 @@ const OrderSuccess = ({ orderId }) => {
     </div>
   );
 };
+
 const Cart = () => {
   const { cartItems, removeFromCart, addToCart, clearCart } = useContext(CartContext);
   const { user, token } = useContext(AuthContext);
@@ -129,12 +137,15 @@ const Cart = () => {
   const [showModal, setShowModal] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState(null);
+
   const subtotal = cartItems.reduce((acc, item) => acc + item.quantity * item.price, 0);
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
   const handleCheckout = () => {
     if (!user) { navigate('/login'); return; }
     setShowModal(true);
   };
+
   const handlePlaceOrder = async (shippingForm) => {
     setPlacing(true);
     try {
@@ -144,7 +155,7 @@ const Cart = () => {
           quantity: item.quantity,
           image: item.image,
           price: item.price,
-          product: item.product,
+          product: Number(item.product) || 0,
         })),
         shippingAddress: {
           address: shippingForm.address,
@@ -155,6 +166,7 @@ const Cart = () => {
         paymentMethod: shippingForm.paymentMethod,
         totalPrice: subtotal,
       };
+
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: {
@@ -163,14 +175,15 @@ const Cart = () => {
         },
         body: JSON.stringify(orderPayload),
       });
+
       if (res.ok) {
         const data = await res.json();
         clearCart();
         setShowModal(false);
-        setPlacedOrderId(data._id);
+        setPlacedOrderId(data.id || data._id);
       } else {
         const err = await res.json();
-        alert(`Failed to place order: ${err.message}`);
+        alert(`Failed to place order: ${err.message || 'Error occurred'}`);
       }
     } catch (err) {
       alert('Network error. Please try again.');
@@ -178,7 +191,9 @@ const Cart = () => {
       setPlacing(false);
     }
   };
+
   if (placedOrderId) return <OrderSuccess orderId={placedOrderId} />;
+
   if (cartItems.length === 0) {
     return (
       <div className="empty-state" style={{ marginTop: '60px' }}>
@@ -191,6 +206,7 @@ const Cart = () => {
       </div>
     );
   }
+
   return (
     <>
       {showModal && (
@@ -233,7 +249,7 @@ const Cart = () => {
                 </div>
                 <select
                   value={item.quantity}
-                  onChange={(e) => addToCart({ _id: item.product, images: [item.image], ...item }, Number(e.target.value))}
+                  onChange={(e) => addToCart({ id: item.product, images: [item.image], ...item }, Number(e.target.value))}
                   className="qty-select"
                 >
                   {[...Array(10).keys()].map((x) => (
@@ -280,4 +296,5 @@ const Cart = () => {
     </>
   );
 };
+
 export default Cart;
