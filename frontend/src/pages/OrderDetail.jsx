@@ -151,14 +151,24 @@ const OrderDetail = () => {
               <MapPin size={18} style={{ color: 'var(--primary-color)' }} />
               <h4>Shipping Address</h4>
             </div>
-            {order.shippingAddress ? (
+            {(order.shippingAddress || order.address) ? (
               <address style={{ fontStyle: 'normal', color: 'var(--text-muted)', lineHeight: '1.8', fontSize: '0.92rem' }}>
-                <strong style={{ color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
-                  {order.shippingAddress.fullName || order.shippingAddress.name || '—'}
-                </strong>
-                {order.shippingAddress.address}<br />
-                {order.shippingAddress.city}, {order.shippingAddress.state} – {order.shippingAddress.postalCode}<br />
-                {order.shippingAddress.country || 'India'}
+                {order.address ? (
+                  <>
+                    {order.address}<br />
+                    {order.city} – {order.postalCode}<br />
+                    {order.country || 'India'}
+                  </>
+                ) : (
+                  <>
+                    <strong style={{ color: 'var(--text-main)', display: 'block', marginBottom: '4px' }}>
+                      {order.shippingAddress.fullName || order.shippingAddress.name || '—'}
+                    </strong>
+                    {order.shippingAddress.address}<br />
+                    {order.shippingAddress.city}, {order.shippingAddress.state} – {order.shippingAddress.postalCode}<br />
+                    {order.shippingAddress.country || 'India'}
+                  </>
+                )}
               </address>
             ) : (
               <p style={{ color: 'var(--text-muted)' }}>No shipping address on record.</p>
