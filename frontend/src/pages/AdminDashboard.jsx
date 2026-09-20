@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { Edit2, Trash2, Plus, X, Mail, MailOpen } from 'lucide-react';
+
 const Modal = ({ title, onClose, children }) => (
   <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
     <div style={{ background: 'var(--card-bg)', width: '500px', maxWidth: '90%', borderRadius: '8px', padding: '20px', position: 'relative' }}>
@@ -11,13 +12,18 @@ const Modal = ({ title, onClose, children }) => (
     </div>
   </div>
 );
+
 const UsersAdmin = ({ token }) => {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const fetchUsers = async () => {
-    const res = await fetch('/api/users', { headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    if(res.ok) setUsers(data);
+    try {
+      const res = await fetch('/api/users', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if(res.ok) setUsers(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+    }
   };
   useEffect(() => { fetchUsers(); }, []);
   const deleteUser = async (id) => {
@@ -27,7 +33,8 @@ const UsersAdmin = ({ token }) => {
   };
   const handleUpdate = async (e) => {
     e.preventDefault();
-    const res = await fetch(`/api/users/${editingUser._id}`, {
+    const uId = editingUser.id || editingUser._id;
+    const res = await fetch(`/api/users/${uId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ name: editingUser.name, email: editingUser.email, role: editingUser.role })
@@ -46,15 +53,19 @@ const UsersAdmin = ({ token }) => {
       <table className="table" style={{ marginTop: '20px' }}>
         <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
         <tbody>
-          {users.map(u => (
-            <tr key={u._id}>
-              <td>{u._id.substring(0,8)}</td><td>{u.name}</td><td>{u.email}</td><td>{u.role}</td>
-              <td style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => setEditingUser(u)} className="btn btn-outline" style={{ padding: '5px' }} title="Edit"><Edit2 size={16} /></button>
-                <button onClick={() => deleteUser(u._id)} className="btn btn-danger" style={{ padding: '5px' }} title="Delete"><Trash2 size={16} /></button>
-              </td>
-            </tr>
-          ))}
+          {users.map(u => {
+            const uId = u.id || u._id || '';
+            const uIdStr = String(uId);
+            return (
+              <tr key={uIdStr}>
+                <td>{uIdStr.length > 8 ? uIdStr.substring(0,8) : uIdStr}</td><td>{u.name}</td><td>{u.email}</td><td>{u.role}</td>
+                <td style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={() => setEditingUser(u)} className="btn btn-outline" style={{ padding: '5px' }} title="Edit"><Edit2 size={16} /></button>
+                  <button onClick={() => deleteUser(uId)} className="btn btn-danger" style={{ padding: '5px' }} title="Delete"><Trash2 size={16} /></button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {editingUser && (
@@ -73,15 +84,18 @@ const UsersAdmin = ({ token }) => {
     </div>
   );
 };
+
 const ProductsAdmin = ({ token }) => {
   const [products, setProducts] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fetchProducts = async () => {
-    const res = await fetch('/api/products');
-    const data = await res.json();
-    if(res.ok) setProducts(data);
+    try {
+      const res = await fetch('/api/products');
+      const data = await res.json();
+      if(res.ok) setProducts(Array.isArray(data) ? data : []);
+    } catch(e) { console.error(e); }
   };
   useEffect(() => { fetchProducts(); }, []);
   const deleteProduct = async (id) => {
@@ -99,8 +113,9 @@ const ProductsAdmin = ({ token }) => {
   };
   const handleSave = async (e) => {
     e.preventDefault();
-    const url = editingProduct._id ? `/api/products/${editingProduct._id}` : '/api/products';
-    const method = editingProduct._id ? 'PUT' : 'POST';
+    const pId = editingProduct.id || editingProduct._id;
+    const url = pId ? `/api/products/${pId}` : '/api/products';
+    const method = pId ? 'PUT' : 'POST';
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -144,19 +159,22 @@ const ProductsAdmin = ({ token }) => {
       <table className="table" style={{ marginTop: '20px' }}>
         <thead><tr><th>Name</th><th>Brand</th><th>Price</th><th>Actions</th></tr></thead>
         <tbody>
-          {products.map(p => (
-            <tr key={p._id}>
-              <td>{p.name}</td><td>{p.brand}</td><td>₹{p.price}</td>
-              <td style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => openEditModal(p)} className="btn btn-outline" style={{ padding: '5px' }}><Edit2 size={16} /></button>
-                <button onClick={() => deleteProduct(p._id)} className="btn btn-danger" style={{ padding: '5px' }}><Trash2 size={16} /></button>
-              </td>
-            </tr>
-          ))}
+          {products.map(p => {
+            const pId = p.id || p._id;
+            return (
+              <tr key={pId}>
+                <td>{p.name}</td><td>{p.brand}</td><td>₹{p.price}</td>
+                <td style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={() => openEditModal(p)} className="btn btn-outline" style={{ padding: '5px' }}><Edit2 size={16} /></button>
+                  <button onClick={() => deleteProduct(pId)} className="btn btn-danger" style={{ padding: '5px' }}><Trash2 size={16} /></button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {isModalOpen && (
-        <Modal title={editingProduct._id ? "Edit Product" : "Add Product"} onClose={() => setIsModalOpen(false)}>
+        <Modal title={(editingProduct.id || editingProduct._id) ? "Edit Product" : "Add Product"} onClose={() => setIsModalOpen(false)}>
           <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <input className="form-control" value={editingProduct.name} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} placeholder="Name" required />
             <input className="form-control" value={editingProduct.brand} onChange={e => setEditingProduct({...editingProduct, brand: e.target.value})} placeholder="Brand" required />
@@ -175,19 +193,22 @@ const ProductsAdmin = ({ token }) => {
     </div>
   );
 };
+
 const OrdersAdmin = ({ token }) => {
   const [orders, setOrders] = useState([]);
   const fetchOrders = async () => {
-    const res = await fetch('/api/orders', { headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    if(res.ok) setOrders(data);
+    try {
+      const res = await fetch('/api/orders', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if(res.ok) setOrders(Array.isArray(data) ? data : []);
+    } catch(e) { console.error(e); }
   };
   useEffect(() => { fetchOrders(); }, []);
   const updateStatus = async (id, status) => {
     const res = await fetch(`/api/orders/${id}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status })
+      body: JSON.stringify(status)
     });
     if(res.ok) fetchOrders();
   };
@@ -202,42 +223,49 @@ const OrdersAdmin = ({ token }) => {
       <table className="table" style={{ marginTop: '20px' }}>
         <thead><tr><th>Order ID</th><th>User</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
-          {orders.map(o => (
-            <tr key={o._id}>
-              <td>{o._id.substring(0,8)}</td>
-              <td>{o.user?.name || 'Unknown'}</td>
-              <td>₹{o.totalPrice}</td>
-              <td>
-                <select 
-                  value={o.status} 
-                  onChange={(e) => updateStatus(o._id, e.target.value)}
-                  style={{ padding: '4px', borderRadius: '4px' }}
-                >
-                  <option value="Processing">Processing</option>
-                  <option value="Shipped">Shipped</option>
-                  <option value="Delivered">Delivered</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </td>
-              <td style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => deleteOrder(o._id)} className="btn btn-danger" style={{ padding: '5px' }} title="Delete Order"><Trash2 size={16} /></button>
-              </td>
-            </tr>
-          ))}
+          {orders.map(o => {
+            const oId = o.id || o._id || '';
+            const oIdStr = String(oId);
+            return (
+              <tr key={oIdStr}>
+                <td>{oIdStr.length > 8 ? oIdStr.substring(0,8) : oIdStr}</td>
+                <td>{o.user?.name || 'Unknown'}</td>
+                <td>₹{o.totalPrice}</td>
+                <td>
+                  <select 
+                    value={o.status} 
+                    onChange={(e) => updateStatus(oId, e.target.value)}
+                    style={{ padding: '4px', borderRadius: '4px' }}
+                  >
+                    <option value="Processing">Processing</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </td>
+                <td style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={() => deleteOrder(oId)} className="btn btn-danger" style={{ padding: '5px' }} title="Delete Order"><Trash2 size={16} /></button>
+                </td>
+              </tr>
+            );
+          })}
           {orders.length === 0 && <tr><td colSpan="5" style={{textAlign:'center'}}>No orders found</td></tr>}
         </tbody>
       </table>
     </div>
   );
 };
+
 const CategoriesAdmin = ({ token }) => {
   const [categories, setCategories] = useState([]);
   const [editingCategory, setEditingCategory] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fetchCategories = async () => {
-    const res = await fetch('/api/categories');
-    const data = await res.json();
-    if(res.ok) setCategories(data);
+    try {
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      if(res.ok) setCategories(Array.isArray(data) ? data : []);
+    } catch(e) { console.error(e); }
   };
   useEffect(() => { fetchCategories(); }, []);
   const deleteCategory = async (id) => {
@@ -255,8 +283,9 @@ const CategoriesAdmin = ({ token }) => {
   };
   const handleSave = async (e) => {
     e.preventDefault();
-    const url = editingCategory._id ? `/api/categories/${editingCategory._id}` : '/api/categories';
-    const method = editingCategory._id ? 'PUT' : 'POST';
+    const cId = editingCategory.id || editingCategory._id;
+    const url = cId ? `/api/categories/${cId}` : '/api/categories';
+    const method = cId ? 'PUT' : 'POST';
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -278,21 +307,24 @@ const CategoriesAdmin = ({ token }) => {
       <table className="table" style={{ marginTop: '20px' }}>
         <thead><tr><th>Category Name</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
-          {categories.map((c) => (
-            <tr key={c._id || c.name}>
-              <td>{c.name}</td>
-              <td style={{ color: 'var(--primary-color)' }}>Active</td>
-              <td style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => openEditModal(c)} className="btn btn-outline" style={{ padding: '5px' }}><Edit2 size={16} /></button>
-                <button onClick={() => deleteCategory(c._id)} className="btn btn-danger" style={{ padding: '5px' }}><Trash2 size={16} /></button>
-              </td>
-            </tr>
-          ))}
+          {categories.map((c) => {
+            const cId = c.id || c._id;
+            return (
+              <tr key={cId || c.name}>
+                <td>{c.name}</td>
+                <td style={{ color: 'var(--primary-color)' }}>Active</td>
+                <td style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={() => openEditModal(c)} className="btn btn-outline" style={{ padding: '5px' }}><Edit2 size={16} /></button>
+                  <button onClick={() => deleteCategory(cId)} className="btn btn-danger" style={{ padding: '5px' }}><Trash2 size={16} /></button>
+                </td>
+              </tr>
+            );
+          })}
           {categories.length === 0 && <tr><td colSpan="3" style={{textAlign:'center'}}>No categories found</td></tr>}
         </tbody>
       </table>
       {isModalOpen && (
-        <Modal title={editingCategory._id ? "Edit Category" : "Add Category"} onClose={() => setIsModalOpen(false)}>
+        <Modal title={(editingCategory.id || editingCategory._id) ? "Edit Category" : "Add Category"} onClose={() => setIsModalOpen(false)}>
           <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             <input className="form-control" value={editingCategory.name} onChange={e => setEditingCategory({...editingCategory, name: e.target.value})} placeholder="Category Name (e.g. Mechanical)" required />
             <button className="btn btn-primary" type="submit">Save Category</button>
@@ -302,13 +334,16 @@ const CategoriesAdmin = ({ token }) => {
     </div>
   );
 };
+
 const MessagesAdmin = ({ token }) => {
   const [messages, setMessages] = useState([]);
   const [selected, setSelected] = useState(null);
   const fetchMessages = async () => {
-    const res = await fetch('/api/messages', { headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    if (res.ok) setMessages(data);
+    try {
+      const res = await fetch('/api/messages', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (res.ok) setMessages(Array.isArray(data) ? data : []);
+    } catch(e) { console.error(e); }
   };
   useEffect(() => { fetchMessages(); }, []);
   const markRead = async (id) => {
@@ -317,13 +352,15 @@ const MessagesAdmin = ({ token }) => {
   };
   const deleteMessage = async (id) => {
     if (!window.confirm('Delete this message permanently?')) return;
-    await fetch(`/api/messages/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    const mId = selected.id || selected._id;
+    await fetch(`/api/messages/${mId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
     setSelected(null);
     fetchMessages();
   };
   const openMessage = (msg) => {
     setSelected(msg);
-    if (!msg.isRead) markRead(msg._id);
+    const mId = msg.id || msg._id;
+    if (!msg.isRead) markRead(mId);
   };
   const unreadCount = messages.filter(m => !m.isRead).length;
   return (
@@ -336,30 +373,34 @@ const MessagesAdmin = ({ token }) => {
           {messages.length === 0 && (
             <p style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>No messages yet.</p>
           )}
-          {messages.map(msg => (
-            <div
-              key={msg._id}
-              onClick={() => openMessage(msg)}
-              style={{
-                padding: '16px 20px',
-                borderBottom: '1px solid var(--border-color)',
-                cursor: 'pointer',
-                background: selected?._id === msg._id ? 'rgba(212,175,55,0.08)' : msg.isRead ? 'transparent' : 'rgba(212,175,55,0.04)',
-                display: 'flex', gap: '12px', alignItems: 'center',
-              }}
-            >
-              <div style={{ color: msg.isRead ? 'var(--text-muted)' : 'var(--primary-color)', flexShrink: 0 }}>
-                {msg.isRead ? <MailOpen size={18} /> : <Mail size={18} />}
+          {messages.map(msg => {
+            const mId = msg.id || msg._id;
+            const selId = selected ? (selected.id || selected._id) : null;
+            return (
+              <div
+                key={mId}
+                onClick={() => openMessage(msg)}
+                style={{
+                  padding: '16px 20px',
+                  borderBottom: '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  background: selId === mId ? 'rgba(212,175,55,0.08)' : msg.isRead ? 'transparent' : 'rgba(212,175,55,0.04)',
+                  display: 'flex', gap: '12px', alignItems: 'center',
+                }}
+              >
+                <div style={{ color: msg.isRead ? 'var(--text-muted)' : 'var(--primary-color)', flexShrink: 0 }}>
+                  {msg.isRead ? <MailOpen size={18} /> : <Mail size={18} />}
+                </div>
+                <div style={{ overflow: 'hidden' }}>
+                  <p style={{ fontWeight: msg.isRead ? '400' : '700', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{msg.name}</p>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{msg.subject}</p>
+                </div>
+                <p style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-muted)', flexShrink: 0 }}>
+                  {new Date(msg.createdAt).toLocaleDateString('en-IN')}
+                </p>
               </div>
-              <div style={{ overflow: 'hidden' }}>
-                <p style={{ fontWeight: msg.isRead ? '400' : '700', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{msg.name}</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{msg.subject}</p>
-              </div>
-              <p style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-muted)', flexShrink: 0 }}>
-                {new Date(msg.createdAt).toLocaleDateString('en-IN')}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '28px', minHeight: '300px' }}>
           {selected ? (
@@ -374,7 +415,7 @@ const MessagesAdmin = ({ token }) => {
                     {new Date(selected.createdAt).toLocaleString('en-IN')}
                   </p>
                 </div>
-                <button onClick={() => deleteMessage(selected._id)} className="btn btn-danger" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <button onClick={() => deleteMessage(selected.id || selected._id)} className="btn btn-danger" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Trash2 size={14} /> Delete
                 </button>
               </div>
@@ -392,6 +433,7 @@ const MessagesAdmin = ({ token }) => {
     </div>
   );
 };
+
 const AdminDashboard = () => {
   const { user, token } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -414,4 +456,5 @@ const AdminDashboard = () => {
     </div>
   );
 };
+
 export default AdminDashboard;
